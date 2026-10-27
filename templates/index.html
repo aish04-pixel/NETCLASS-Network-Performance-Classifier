@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0d0c">
+
+  <title>NETCLASS — Network Diagnostics</title>
+  <meta name="description" content="Experimental network performance classification using a trained Random Forest model.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;650;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#" aria-label="NETCLASS home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M5 23V9L16 23V9L27 23V9"
+              stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-name">NETCLASS</span>
+          <span class="brand-subtitle">NETWORK DIAGNOSTICS</span>
+        </span>
+      </a>
+
+      <div class="connection-status" id="status" role="status" aria-live="polite">
+        <span class="status-dot" data-state="checking" aria-hidden="true"></span>
+        <span id="status-text">Connecting to model</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <section class="intro" aria-labelledby="page-title">
+      <div class="eyebrow">
+        <span class="eyebrow-line"></span>
+        MACHINE LEARNING / EXPERIMENTAL
+      </div>
+
+      <h1 id="page-title">Network performance<br>classification<span class="title-period">.</span></h1>
+
+      <p class="intro-copy">
+        Evaluate connection conditions from network and call parameters.
+        A trained Random Forest model classifies each input as Strong,
+        Moderate or Weak.
+      </p>
+
+      <div class="model-strip">
+        <div class="model-strip-item">
+          <span class="micro-label">MODEL</span>
+          <span class="strip-value">Random Forest</span>
+        </div>
+        <div class="model-strip-item">
+          <span class="micro-label">TEST ACCURACY</span>
+          <span class="strip-value mono">49.46%</span>
+        </div>
+        <div class="model-strip-item">
+          <span class="micro-label">CLASSIFICATIONS</span>
+          <span class="strip-value">03 classes</span>
+        </div>
+      </div>
+
+      <p class="accuracy-note">
+        Accuracy measured on a held-out test set. It does not guarantee the
+        correctness of an individual prediction.
+      </p>
+    </section>
+
+    <section class="workspace" id="classifier" aria-labelledby="classifier-title">
+      <div class="section-heading">
+        <div class="section-number">01</div>
+        <div>
+          <h2 id="classifier-title">Connection parameters</h2>
+          <p>Enter the available network measurements.</p>
+        </div>
+      </div>
+
+      <form id="predict-form" class="diagnostic-form" novalidate>
+        <div class="form-section-label">SIGNAL &amp; DISTANCE</div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="snr">Signal-to-noise ratio <span class="required">*</span></label>
+            <input id="snr" name="snr" type="number" step="any"
+              placeholder="Enter SNR" required aria-describedby="snr-err">
+            <p class="field-error" id="snr-err"></p>
+          </div>
+
+          <div class="field">
+            <label for="attenuation">Attenuation <span class="required">*</span></label>
+            <input id="attenuation" name="attenuation" type="number" min="0" step="any"
+              placeholder="Enter attenuation" required aria-describedby="attenuation-err">
+            <p class="field-error" id="attenuation-err"></p>
+          </div>
+
+          <div class="field">
+            <label for="distance">Distance to tower <span class="unit">(km)</span> <span class="required">*</span></label>
+            <input id="distance" name="distance" type="number" min="0" step="any"
+              placeholder="e.g. 1.5" required aria-describedby="distance-err">
+            <p class="field-error" id="distance-err"></p>
+          </div>
+
+          <div class="field">
+            <label for="duration">Call duration <span class="unit">(seconds)</span> <span class="required">*</span></label>
+            <input id="duration" name="duration" type="number" min="0" step="any"
+              placeholder="e.g. 120" required aria-describedby="duration-err">
+            <p class="field-error" id="duration-err"></p>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+        <div class="form-section-label">CONNECTION CONTEXT</div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="environment">Environment <span class="required">*</span></label>
+            <select id="environment" name="environment" required aria-describedby="environment-err">
+              <option value="" selected disabled>Select environment</option>
+              <option value="Urban">Urban</option>
+              <option value="Home">Home</option>
+              <option value="Open">Open</option>
+              <option value="Suburban">Suburban</option>
+            </select>
+            <p class="field-error" id="environment-err"></p>
+          </div>
+
+          <div class="field">
+            <label for="call_type">Call type <span class="required">*</span></label>
+            <select id="call_type" name="call_type" required aria-describedby="call_type-err">
+              <option value="" selected disabled>Select type</option>
+              <option value="Voice">Voice</option>
+              <option value="Data">Data</option>
+            </select>
+            <p class="field-error" id="call_type-err"></p>
+          </div>
+
+          <div class="field field-full">
+            <label for="direction">Connection direction <span class="required">*</span></label>
+            <select id="direction" name="direction" required aria-describedby="direction-err">
+              <option value="" selected disabled>Select direction</option>
+              <option value="Incoming">Incoming</option>
+              <option value="Outgoing">Outgoing</option>
+            </select>
+            <p class="field-error" id="direction-err"></p>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="primary-button" id="submit-btn">
+            <span class="button-spinner" aria-hidden="true"></span>
+            <span id="submit-label">Run classification</span>
+            <svg class="button-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M4 10H16M10 4L16 10L10 16"
+                stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button type="reset" class="reset-button" id="reset-btn">Clear fields</button>
+        </div>
+
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <section class="result-section" id="result" aria-labelledby="result-title" aria-live="polite" hidden>
+      <div class="section-heading">
+        <div class="section-number">02</div>
+        <div>
+          <h2 id="result-title">Classification result</h2>
+          <p>Output from the trained model for this input.</p>
+        </div>
+      </div>
+
+      <div class="result-panel" id="result-panel" data-category="unknown">
+        <div class="result-topline">
+          <span class="result-overline">PREDICTED CATEGORY</span>
+          <span class="result-tag" id="result-tag">MODEL OUTPUT</span>
+        </div>
+
+        <p class="result-category" id="result-category">—</p>
+        <p class="result-interpretation" id="result-interpretation">
+          Submit connection parameters to generate a prediction.
+        </p>
+
+        <div class="result-divider"></div>
+
+        <div class="result-stats">
+          <div>
+            <span class="micro-label">MODEL CONFIDENCE</span>
+            <p class="result-confidence mono" id="result-confidence">—</p>
+          </div>
+          <div>
+            <span class="micro-label">CLASSIFIER</span>
+            <p class="result-model" id="result-model">Random Forest</p>
+          </div>
+        </div>
+
+        <p class="result-disclaimer">
+          Confidence is the model's estimated probability for its selected
+          class, not a guarantee of correctness or a measure of test accuracy.
+        </p>
+      </div>
+    </section>
+
+    <section class="model-section" id="model-info" aria-labelledby="model-title">
+      <div class="section-heading">
+        <div class="section-number">03</div>
+        <div>
+          <h2 id="model-title">Model &amp; methodology</h2>
+          <p>How this classification system is configured.</p>
+        </div>
+      </div>
+
+      <div class="details-panel">
+        <div class="detail-row">
+          <span class="detail-label">Algorithm</span>
+          <span class="detail-value">Random Forest Classifier</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Input features</span>
+          <div class="detail-value">
+            <div class="feature-list">
+              <span>SNR</span>
+              <span>Attenuation</span>
+              <span>Tower distance</span>
+              <span>Call duration</span>
+              <span>Environment</span>
+              <span>Call type</span>
+              <span>Direction</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Training workflow</span>
+          <span class="detail-value">
+            Trained in Google Colab, exported using Joblib and loaded by a
+            local Flask API.
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Target labels</span>
+          <span class="detail-value">
+            Strong, Moderate and Weak were derived from illustrative
+            signal-strength thresholds. They are not verified industry-standard
+            network-quality labels.
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Test accuracy</span>
+          <span class="detail-value">
+            49.46% on the held-out test set. Performance is limited and
+            predictions should be interpreted cautiously.
+          </span>
+        </div>
+      </div>
+
+      <div class="notice">
+        <span class="notice-mark" aria-hidden="true">i</span>
+        <p>
+          <strong>Experimental academic demonstration.</strong>
+          This model is not a validated telecom diagnostic system.
+          Do not use its predictions for operational or engineering decisions.
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>NETCLASS <span class="footer-separator">/</span> NETWORK DIAGNOSTICS</span>
+      <span>EXPERIMENTAL BUILD</span>
+    </footer>
+  </main>
+</body>
+</html>

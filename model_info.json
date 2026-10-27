@@ -1,0 +1,20 @@
+{
+    "project_name": "Network Performance Classification",
+    "model_name": "Random Forest Classifier",
+    "accuracy_percent": 49.46,
+    "classes": [
+        "Strong",
+        "Moderate",
+        "Weak"
+    ],
+    "features": [
+        "SNR",
+        "Attenuation",
+        "Distance to Tower (km)",
+        "Call Duration (s)",
+        "Environment",
+        "Call Type",
+        "Incoming/Outgoing"
+    ],
+    "note": "Signal categories are generated from illustrative signal-strength thresholds. Predictions are for demonstration, not verified network-quality assessments."
+}
